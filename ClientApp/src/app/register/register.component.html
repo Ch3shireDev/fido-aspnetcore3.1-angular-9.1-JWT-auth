@@ -1,0 +1,21 @@
+<form style="max-width: 400px" [formGroup]="registerForm" (ngSubmit)="register()">
+  <div class="form-group">
+    <label class="form-label">Identyfikator użytkownika</label
+    ><input class="form-control" formControlName="username"/>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Nazwa użytkownika</label
+    ><input class="form-control" formControlName="displayName" />
+  </div>
+  <div class="form-group">
+    <label class="form-label">Hasło</label
+    ><input class="form-control" type="password" formControlName="password1" />
+  </div>
+  <div class="form-group">
+    <label class="form-label">Powtórz hasło</label
+    ><input class="form-control" type="password"  formControlName="password2"  />
+  </div>
+  <div class="form-group">
+    <button type="submit" class="btn btn-primary my-3">Rejestruj</button>
+  </div>
+</form>

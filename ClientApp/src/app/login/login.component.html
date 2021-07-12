@@ -1,0 +1,13 @@
+<form style="max-width: 400px" [formGroup]="loginForm" (ngSubmit)="login()">
+  <div class="form-group">
+    <label class="form-label">Nazwa użytkownika</label
+    ><input class="form-control" formControlName="username"/>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Hasło</label
+    ><input class="form-control" formControlName="password" type="password" />
+  </div>
+  <div class="form-group">
+    <button class="btn btn-primary my-3" type="submit">Zaloguj</button>
+  </div>
+</form>
