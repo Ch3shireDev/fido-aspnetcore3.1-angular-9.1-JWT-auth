@@ -10,16 +10,16 @@ export class AppComponent {
   title = 'ClientApp';
 
   get user(): { displayName: string } {
-    try{
-    return this.userService.user;
-    }
-    catch{
-      return null;
-    }
+    // try{
+    // return this.userService.user;
+    // }
+    // catch{
+    //   return null;
+    // }
+    return { displayName: 'abc' };
   }
 
   constructor(private userService: UserService) {}
 
-  ngOnInit() {
-  }
+  ngOnInit() {}
 }

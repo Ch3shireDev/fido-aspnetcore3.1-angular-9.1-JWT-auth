@@ -17,10 +17,14 @@ export class UserService {
   constructor(private httpClient: HttpClient) {}
 
   public get user(): { username: string; displayName: string } {
-    return JSON.parse(localStorage.getItem('user')) as {
-      username: string;
-      displayName: string;
-    };
+    try {
+      return JSON.parse(localStorage.getItem('user')) as {
+        username: string;
+        displayName: string;
+      };
+    } catch {
+      return undefined;
+    }
   }
 
   public get token(): string {
@@ -28,26 +32,25 @@ export class UserService {
   }
 
   public login(loginForm: FormGroup) {
-    const formData = new FormData();
-    formData.append('username', loginForm.get('username').value);
-    formData.append('password', loginForm.get('password').value);
-    return this.httpClient.post(`${this.api}/user/login-begin`, formData).pipe(
-      map((success: { user: any }) => {
-        console.log(success.user);
-        localStorage.setItem('user', JSON.stringify(success.user));
-        localStorage.setItem('token', success.user.token);
-        return success;
-      })
-    );
+    // const formData = new FormData();
+    // formData.append('username', loginForm.get('username').value);
+    // formData.append('password', loginForm.get('password').value);
+    // return this.httpClient.post(`${this.api}/user/login-begin`, formData).pipe(
+    //   map((success: { user: any }) => {
+    //     console.log(success.user);
+    //     localStorage.setItem('user', JSON.stringify(success.user));
+    //     localStorage.setItem('token', success.user.token);
+    //     return success;
+    //   })
+    // );
   }
 
   public register(registerForm: FormGroup) {
-    const formData = new FormData();
-    formData.append('username', registerForm.get('username').value);
-    formData.append('displayName', registerForm.get('displayName').value);
-    formData.append('password1', registerForm.get('password1').value);
-    formData.append('password2', registerForm.get('password2').value);
-
-    return this.httpClient.post(`${this.api}/user/register-begin`, formData);
+    // const formData = new FormData();
+    // formData.append('username', registerForm.get('username').value);
+    // formData.append('displayName', registerForm.get('displayName').value);
+    // formData.append('password1', registerForm.get('password1').value);
+    // formData.append('password2', registerForm.get('password2').value);
+    // return this.httpClient.post(`${this.api}/user/register-begin`, formData);
   }
 }

@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using AutoMapper;
+using Fido2NetLib;
+using Fido2NetLib.Objects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -14,19 +17,20 @@ namespace WebAPI.Controllers
 {
     [Route("/api/user")]
     [ApiController]
-    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly AppSettings _appSettings;
         private readonly IMapper _mapper;
         private readonly IUserService _userService;
+        private readonly IFido2 _fido2;
 
-        public UserController(IUserService userService, IMapper mapper,
+        public UserController(IUserService userService, IMapper mapper, IFido2 fido2,
             IOptions<AppSettings> appSettings)
         {
             _userService = userService;
             _mapper = mapper;
             _appSettings = appSettings.Value;
+            _fido2 = fido2;
         }
 
         [HttpPost("register-begin")]
@@ -36,7 +40,41 @@ namespace WebAPI.Controllers
             if (password1 != password2) return BadRequest();
             var password = password1;
             var user = _mapper.Map<UserModel>(_userService.GetOrAddUser(username, password, displayName));
-            return Ok(user);
+
+            var exts = new AuthenticationExtensionsClientInputs()
+            {
+                Extensions = true,
+                UserVerificationIndex = true,
+                Location = true,
+                UserVerificationMethod = true,
+                BiometricAuthenticatorPerformanceBounds = new AuthenticatorBiometricPerfBounds
+                {
+                    FAR = float.MaxValue,
+                    FRR = float.MaxValue
+                }
+            };
+            var existingKeys = new List<PublicKeyCredentialDescriptor>();
+
+            var fido2user = new Fido2User
+            {
+                DisplayName = displayName,
+                Id = Encoding.UTF8.GetBytes(username),
+                Name = username
+            };
+
+            var attType = "none";
+
+            var requireResidentKey = false;
+            var userVerification = "preferred";
+
+            var authenticatorSelection = new AuthenticatorSelection
+            {
+                RequireResidentKey = requireResidentKey,
+                UserVerification = userVerification.ToEnum<UserVerificationRequirement>()
+            };
+            var options = _fido2.RequestNewCredential(fido2user, existingKeys, authenticatorSelection, attType.ToEnum<AttestationConveyancePreference>(), exts);
+
+            return new JsonResult(options);
         }
 
         [HttpPost("register-end")]

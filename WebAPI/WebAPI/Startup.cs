@@ -1,8 +1,10 @@
+using System;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -55,7 +57,7 @@ namespace WebAPI
                             var userId = int.Parse(context.Principal.Identity.Name);
                             var user = userService.GetById(userId);
                             if (user == null)
-                                // return unauthorized if user no longer exists
+                                // return unauthorized if user no longer exists.
                                 context.Fail("Unauthorized");
                             return Task.CompletedTask;
                         }
@@ -74,6 +76,38 @@ namespace WebAPI
 
             services.AddScoped<IUserService, UserService>();
             services.AddControllers();
+
+            services.AddDistributedMemoryCache();
+            services.AddSession(options =>
+            {
+                // Set a short timeout for easy testing.
+                options.IdleTimeout = TimeSpan.FromMinutes(2);
+                options.Cookie.HttpOnly = true;
+                // Strict SameSite mode is required because the default mode used
+                // by ASP.NET Core 3 isn't understood by the Conformance Tool
+                // and breaks conformance testing
+                options.Cookie.SameSite = SameSiteMode.Unspecified;
+            });
+
+            services.AddFido2(options =>
+                {
+                    options.ServerDomain = _configuration["fido2:serverDomain"];
+                    options.ServerName = "FIDO2 Test";
+                    options.Origin = _configuration["fido2:origin"];
+                    options.TimestampDriftTolerance = _configuration.GetValue<int>("fido2:timestampDriftTolerance");
+                    options.MDSAccessKey = _configuration["fido2:MDSAccessKey"];
+                    options.MDSCacheDirPath = _configuration["fido2:MDSCacheDirPath"];
+                })
+                .AddCachedMetadataService(config =>
+                {
+                    // They'll be used in a "first match wins" way in the order registered.
+
+                    if (!string.IsNullOrWhiteSpace(_configuration["fido2:MDSAccessKey"]))
+                    {
+                        config.AddFidoMetadataRepository(_configuration["fido2:MDSAccessKey"]);
+                    }
+                    config.AddStaticMetadataRepository();
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
