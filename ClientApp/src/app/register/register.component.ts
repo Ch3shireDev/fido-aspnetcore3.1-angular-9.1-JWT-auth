@@ -14,8 +14,7 @@ export class RegisterComponent implements OnInit {
   public registerForm = this.formBuilder.group({
     username: 'alice',
     displayName: 'alice',
-    password1: 'alice',
-    password2: 'alice',
+    password: 'alice',
   });
   constructor(
     private userService: UserService,
@@ -32,11 +31,16 @@ export class RegisterComponent implements OnInit {
 
     let username = this.registerForm.get('username').value;
     let displayName = this.registerForm.get('displayName').value;
+    let password = this.registerForm.get('password').value;
 
-    await this.handleRegisterSubmit(username, displayName);
+    await this.handleRegisterSubmit(username, displayName, password);
   }
 
-  public async handleRegisterSubmit(username: string, displayName: string) {
+  public async handleRegisterSubmit(
+    username: string,
+    displayName: string,
+    password: string
+  ) {
     // passwordfield is omitted in demo
     // let password = this.password.value;
 
@@ -55,39 +59,45 @@ export class RegisterComponent implements OnInit {
     var data = new FormData();
     data.append('username', username);
     data.append('displayName', displayName);
+    data.append('password', password);
     data.append('attType', attestation_type);
     data.append('authType', authenticator_attachment);
     data.append('userVerification', user_verification);
     data.append('requireResidentKey', JSON.stringify(require_resident_key));
 
+    console.log(password);
+
     // send to server for registering
-    let makeCredentialOptions: any = await this.fetchMakeCredentialOptions(
-      data
-    );
+    let makeCredentialOptions;
+    try {
+      makeCredentialOptions = await this.fetchMakeCredentialOptions(data);
+    } catch (e) {
+      console.error(e);
+      let msg = "Something wen't really wrong";
+      this.showErrorAlert(msg);
+    }
 
     console.log('Credential Options Object', makeCredentialOptions);
 
     if (makeCredentialOptions.status !== 'ok') {
       console.log('Error creating credential options');
       console.log(makeCredentialOptions.errorMessage);
-      this.showErrorAlert(makeCredentialOptions.errorMessage, undefined);
+      this.showErrorAlert(makeCredentialOptions.errorMessage);
       return;
     }
 
     // Turn the challenge back into the accepted format of padded base64
     makeCredentialOptions.challenge = this.coerceToArrayBuffer(
-      makeCredentialOptions.challenge,
-      undefined
+      makeCredentialOptions.challenge
     );
     // Turn ID into a UInt8Array Buffer for some reason
     makeCredentialOptions.user.id = this.coerceToArrayBuffer(
-      makeCredentialOptions.user.id,
-      undefined
+      makeCredentialOptions.user.id
     );
 
     makeCredentialOptions.excludeCredentials =
       makeCredentialOptions.excludeCredentials.map((c) => {
-        c.id = this.coerceToArrayBuffer(c.id, undefined);
+        c.id = this.coerceToArrayBuffer(c.id);
         return c;
       });
 
@@ -103,7 +113,7 @@ export class RegisterComponent implements OnInit {
     Swal.fire({
       title: 'Registering...',
       text: 'Tap your security key to finish registration.',
-      imageUrl: '/assets/securitykey.min.svg',
+      imageUrl: '/images/securitykey.min.svg',
       showCancelButton: true,
       showConfirmButton: false,
       focusConfirm: false,
@@ -113,6 +123,9 @@ export class RegisterComponent implements OnInit {
     console.log('Creating PublicKeyCredential...');
 
     let newCredential;
+
+    console.log(navigator);
+
     try {
       newCredential = await navigator.credentials.create({
         publicKey: makeCredentialOptions,
@@ -128,29 +141,28 @@ export class RegisterComponent implements OnInit {
 
     try {
       this.registerNewCredential(newCredential);
-    } catch (e) {
-      this.showErrorAlert(e.message ? e.message : e, undefined);
+    } catch (err) {
+      this.showErrorAlert(err.message ? err.message : err);
     }
   }
 
-  public async fetchMakeCredentialOptions(formData) {
-    console.log('fetch make credential options');
-    let response = await this.http
-      .post('http://localhost/makeCredentialOptions', formData)
-      .toPromise();
+  async fetchMakeCredentialOptions(formData) {
+    let response = await fetch('/api/user/register-begin', {
+      method: 'POST', // or 'PUT'
+      body: formData, // data can be `string` or {object}!
+      headers: {
+        Accept: 'application/json',
+      },
+    });
 
-    let resStr = JSON.stringify(response);
-    console.log(response);
-    console.log(resStr);
-    return JSON.parse(resStr);
+    let data = await response.json();
+
+    return data;
   }
 
   // This should be used to verify the auth data with the server
-  public async registerNewCredential(newCredential) {
+  async registerNewCredential(newCredential) {
     // Move data into Arrays incase it is super long
-
-    console.log('register new credential');
-
     let attestationObject = new Uint8Array(
       newCredential.response.attestationObject
     );
@@ -172,7 +184,7 @@ export class RegisterComponent implements OnInit {
     try {
       response = await this.registerCredentialWithServer(data);
     } catch (e) {
-      this.showErrorAlert(e, undefined);
+      this.showErrorAlert(e);
     }
 
     console.log('Credential Object', response);
@@ -181,7 +193,7 @@ export class RegisterComponent implements OnInit {
     if (response.status !== 'ok') {
       console.log('Error creating credential');
       console.log(response.errorMessage);
-      this.showErrorAlert(response.errorMessage, undefined);
+      this.showErrorAlert(response.errorMessage);
       return;
     }
 
@@ -197,87 +209,24 @@ export class RegisterComponent implements OnInit {
     //window.location.href = "/dashboard/" + state.user.displayName;
   }
 
-  public async registerCredentialWithServer(formData) {
-    console.log('registerCredentialWithServer');
+  async registerCredentialWithServer(formData) {
+    let response = await fetch('/api/user/register-end', {
+      method: 'POST', // or 'PUT'
+      body: JSON.stringify(formData), // data can be `string` or {object}!
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
 
-    console.log('fetch make credential');
-    let response = await this.http
-      .post('http://localhost/makeCredential', formData)
-      .toPromise();
+    let data = await response.json();
 
-    let resStr = JSON.stringify(response);
-    console.log(response);
-    console.log(resStr);
-    return JSON.parse(resStr);
+    return data;
   }
-
-  coerceToArrayBuffer = function (thing, name) {
-    if (typeof thing === 'string') {
-      // base64url to base64
-      thing = thing.replace(/-/g, '+').replace(/_/g, '/');
-
-      // base64 to Uint8Array
-      var str = window.atob(thing);
-      var bytes = new Uint8Array(str.length);
-      for (var i = 0; i < str.length; i++) {
-        bytes[i] = str.charCodeAt(i);
-      }
-      thing = bytes;
-    }
-
-    // Array to Uint8Array
-    if (Array.isArray(thing)) {
-      thing = new Uint8Array(thing);
-    }
-
-    // Uint8Array to ArrayBuffer
-    if (thing instanceof Uint8Array) {
-      thing = thing.buffer;
-    }
-
-    // error if none of the above worked
-    if (!(thing instanceof ArrayBuffer)) {
-      throw new TypeError("could not coerce '" + name + "' to ArrayBuffer");
-    }
-
-    return thing;
-  };
-
-  coerceToBase64Url = function (thing) {
-    // Array or ArrayBuffer to Uint8Array
-    if (Array.isArray(thing)) {
-      thing = Uint8Array.from(thing);
-    }
-
-    if (thing instanceof ArrayBuffer) {
-      thing = new Uint8Array(thing);
-    }
-
-    // Uint8Array to base64
-    if (thing instanceof Uint8Array) {
-      var str = '';
-      var len = thing.byteLength;
-
-      for (var i = 0; i < len; i++) {
-        str += String.fromCharCode(thing[i]);
-      }
-      thing = window.btoa(str);
-    }
-
-    if (typeof thing !== 'string') {
-      throw new Error('could not coerce to string');
-    }
-
-    // base64 to base64url
-    // NOTE: "=" at the end of challenge is optional, strip it off here
-    thing = thing.replace(/\+/g, '-').replace(/\//g, '_').replace(/=*$/g, '');
-
-    return thing;
-  };
 
   // HELPERS
 
-  public showErrorAlert(message, error = undefined) {
+  public showErrorAlert(message, error: any = undefined) {
     let footermsg = '';
     if (error) {
       footermsg = 'exception:' + error.toString();
@@ -310,5 +259,69 @@ export class RegisterComponent implements OnInit {
       return el.checked;
     }
     return el.value;
+  }
+
+  coerceToArrayBuffer(thing, name: string = undefined) {
+    if (typeof thing === 'string') {
+      // base64url to base64
+      thing = thing.replace(/-/g, '+').replace(/_/g, '/');
+
+      // base64 to Uint8Array
+      var str = window.atob(thing);
+      var bytes = new Uint8Array(str.length);
+      for (var i = 0; i < str.length; i++) {
+        bytes[i] = str.charCodeAt(i);
+      }
+      thing = bytes;
+    }
+
+    // Array to Uint8Array
+    if (Array.isArray(thing)) {
+      thing = new Uint8Array(thing);
+    }
+
+    // Uint8Array to ArrayBuffer
+    if (thing instanceof Uint8Array) {
+      thing = thing.buffer;
+    }
+
+    // error if none of the above worked
+    if (!(thing instanceof ArrayBuffer)) {
+      throw new TypeError("could not coerce '" + name + "' to ArrayBuffer");
+    }
+
+    return thing;
+  }
+
+  coerceToBase64Url(thing) {
+    // Array or ArrayBuffer to Uint8Array
+    if (Array.isArray(thing)) {
+      thing = Uint8Array.from(thing);
+    }
+
+    if (thing instanceof ArrayBuffer) {
+      thing = new Uint8Array(thing);
+    }
+
+    // Uint8Array to base64
+    if (thing instanceof Uint8Array) {
+      var str = '';
+      var len = thing.byteLength;
+
+      for (var i = 0; i < len; i++) {
+        str += String.fromCharCode(thing[i]);
+      }
+      thing = window.btoa(str);
+    }
+
+    if (typeof thing !== 'string') {
+      throw new Error('could not coerce to string');
+    }
+
+    // base64 to base64url
+    // NOTE: "=" at the end of challenge is optional, strip it off here
+    thing = thing.replace(/\+/g, '-').replace(/\//g, '_').replace(/=*$/g, '');
+
+    return thing;
   }
 }

@@ -1,5 +1,4 @@
-﻿
-namespace WebAPI.Services
+﻿namespace WebAPI.Services
 {
     public class User
     {

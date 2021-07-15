@@ -42,7 +42,7 @@ export class LoginComponent implements OnInit {
     // send to server for registering
     let makeAssertionOptions;
     try {
-      var res = await fetch('/assertionOptions', {
+      var res = await fetch('/api/user/login-begin', {
         method: 'POST', // or 'PUT'
         body: formData, // data can be `string` or {object}!
         headers: {
@@ -132,7 +132,7 @@ export class LoginComponent implements OnInit {
 
     let response;
     try {
-      let res = await fetch('/makeAssertion', {
+      let res = await fetch('/api/user/login-end', {
         method: 'POST', // or 'PUT'
         body: JSON.stringify(data), // data can be `string` or {object}!
         headers: {
