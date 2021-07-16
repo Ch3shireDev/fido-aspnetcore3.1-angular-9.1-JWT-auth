@@ -10,13 +10,12 @@ export class AppComponent {
   title = 'ClientApp';
 
   get user(): { displayName: string } {
-    // try{
-    // return this.userService.user;
-    // }
-    // catch{
-    //   return null;
-    // }
-    return { displayName: 'abc' };
+    try{
+    return this.userService.user;
+    }
+    catch{
+      return null;
+    }
   }
 
   constructor(private userService: UserService) {}

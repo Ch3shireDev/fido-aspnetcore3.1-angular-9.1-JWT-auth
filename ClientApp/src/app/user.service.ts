@@ -1,8 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { FormGroup } from '@angular/forms';
 import { environment } from 'src/environments/environment';
-import { map } from 'rxjs/operators';
+import {RegisterTools} from './register';
+import {LoginTools} from './login';
+
+import { Tools } from './tools';
+declare let Swal: any;
 
 @Injectable({
   providedIn: 'root',
@@ -31,26 +34,33 @@ export class UserService {
     return localStorage.getItem('token');
   }
 
-  public login(loginForm: FormGroup) {
-    // const formData = new FormData();
-    // formData.append('username', loginForm.get('username').value);
-    // formData.append('password', loginForm.get('password').value);
-    // return this.httpClient.post(`${this.api}/user/login-begin`, formData).pipe(
-    //   map((success: { user: any }) => {
-    //     console.log(success.user);
-    //     localStorage.setItem('user', JSON.stringify(success.user));
-    //     localStorage.setItem('token', success.user.token);
-    //     return success;
-    //   })
-    // );
+  registerBegin = RegisterTools.registerBegin;
+  registerEnd = RegisterTools.registerEnd;
+  loginBegin = LoginTools.loginBegin;
+  loginEnd = LoginTools.loginEnd;
+
+  // Rejestracja użytkownika.
+  public async register(
+    username: string,
+    displayName: string,
+    password: string
+  ) {
+    let newCredential = await this.registerBegin(username, displayName, password);
+    try {
+      await this.registerEnd(newCredential);
+    } catch (err) {
+      Tools.showErrorAlert(err.message ? err.message : err);
+    }
   }
 
-  public register(registerForm: FormGroup) {
-    // const formData = new FormData();
-    // formData.append('username', registerForm.get('username').value);
-    // formData.append('displayName', registerForm.get('displayName').value);
-    // formData.append('password1', registerForm.get('password1').value);
-    // formData.append('password2', registerForm.get('password2').value);
-    // return this.httpClient.post(`${this.api}/user/register-begin`, formData);
+
+  public async login(username: string, password: string) {
+    let credential = await this.loginBegin(username, password);
+    try {
+      await this.loginEnd(credential);
+    } catch (e) {
+      Tools.showErrorAlert('Could not verify assertion', e);
+    }
   }
+
 }
