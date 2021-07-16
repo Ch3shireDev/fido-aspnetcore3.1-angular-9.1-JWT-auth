@@ -11,7 +11,7 @@ export class SecretService {
   getSecret() {
     let token = this.userService.token;
     console.log(token);
-    return this.httpClient.get(`${this.apiUrl}/secret`, {
+    return this.httpClient.get(`http://localhost/api/secret`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

@@ -37,8 +37,6 @@ namespace WebAPI
             var appSettingsSection = _configuration.GetSection("AppSettings");
             services.Configure<AppSettings>(appSettingsSection);
 
-            //services.Configure<AppSettings>(config=>config.);
-
             // configure jwt authentication
             var appSettings = appSettingsSection.Get<AppSettings>();
             var key = Encoding.ASCII.GetBytes(appSettings.Secret);
@@ -54,11 +52,9 @@ namespace WebAPI
                         OnTokenValidated = context =>
                         {
                             var userService = context.HttpContext.RequestServices.GetRequiredService<IUserService>();
-                            var userId = int.Parse(context.Principal.Identity.Name);
-                            var user = userService.GetById(userId);
-                            if (user == null)
-                                // return unauthorized if user no longer exists.
-                                context.Fail("Unauthorized");
+                            var username = context.Principal.Identity.Name;
+                            var user = userService.GetByUsername(username);
+                            if (user == null) context.Fail("Unauthorized");
                             return Task.CompletedTask;
                         }
                     };

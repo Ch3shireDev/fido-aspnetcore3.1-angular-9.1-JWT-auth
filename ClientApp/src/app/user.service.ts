@@ -1,10 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
-import {RegisterTools} from './register';
-import {LoginTools} from './login';
+import { RegisterTools } from './register';
+import { LoginTools } from './login';
 
 import { Tools } from './tools';
+import { Observable } from 'rxjs';
 declare let Swal: any;
 
 @Injectable({
@@ -45,22 +46,28 @@ export class UserService {
     displayName: string,
     password: string
   ) {
-    let newCredential = await this.registerBegin(username, displayName, password);
+    let newCredential = await this.registerBegin(
+      username,
+      displayName,
+      password
+    );
+
+    if (newCredential === undefined) return;
     try {
-      await this.registerEnd(newCredential);
+      await this.registerEnd(newCredential, password);
     } catch (err) {
       Tools.showErrorAlert(err.message ? err.message : err);
     }
   }
 
-
   public async login(username: string, password: string) {
     let credential = await this.loginBegin(username, password);
-    try {
-      await this.loginEnd(credential);
-    } catch (e) {
-      Tools.showErrorAlert('Could not verify assertion', e);
+    if (credential !== undefined) {
+      try {
+        await this.loginEnd(credential);
+      } catch (e) {
+        Tools.showErrorAlert('Could not verify assertion', e);
+      }
     }
   }
-
 }

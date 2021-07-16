@@ -29,7 +29,7 @@ export class RegisterTools {
     data.append('requireResidentKey', JSON.stringify(require_resident_key));
 
     // send to server for registering
-    let makeCredentialOptions;
+    let makeCredentialOptions: any;
     try {
       let response = await fetch('/api/user/register-begin', {
         method: 'POST', // or 'PUT'
@@ -112,7 +112,7 @@ export class RegisterTools {
   }
 
   // Weryfikujemy dane autentykacyjne z serwerem.
-  public static async registerEnd(newCredential) {
+  public static async registerEnd(newCredential, password) {
     // Move data into Arrays incase it is super long
     let attestationObject = new Uint8Array(
       newCredential.response.attestationObject
@@ -131,15 +131,19 @@ export class RegisterTools {
       },
     };
 
+    // prepare form post data
+    var formData = new FormData();
+    formData.append('attestationResponse', JSON.stringify(data));
+    formData.append('password', password);
+
     let response;
     try {
       // response = await this.registerCredentialWithServer(data);
       let response2 = await fetch('/api/user/register-end', {
         method: 'POST', // or 'PUT'
-        body: JSON.stringify(data), // data can be `string` or {object}!
+        body: formData, // data can be `string` or {object}!
         headers: {
           Accept: 'application/json',
-          'Content-Type': 'application/json',
         },
       });
       response = await response2.json();

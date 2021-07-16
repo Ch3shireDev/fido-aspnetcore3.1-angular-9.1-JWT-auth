@@ -12,7 +12,7 @@ export class LoginTools {
     // todo: validate username + password with server (has nothing to do with FIDO2/WebAuthn)
 
     // send to server for registering
-    let makeAssertionOptions;
+    let makeAssertionOptions :any;
     try {
       var res = await fetch('/api/user/login-begin', {
         method: 'POST', // or 'PUT'
@@ -31,8 +31,6 @@ export class LoginTools {
 
     // show options error to user
     if (makeAssertionOptions.status !== 'ok') {
-      console.log('Error creating assertion options');
-      console.log(makeAssertionOptions.errorMessage);
       Tools.showErrorAlert(makeAssertionOptions.errorMessage);
       return;
     }
@@ -125,7 +123,10 @@ export class LoginTools {
       return;
     }
 
-    console.log(response);
+    localStorage.setItem('displayName', response.displayName);
+    localStorage.setItem('token', response.token);
+
+    console.log("Data:", response);
 
     // show success message
     await Swal.fire({

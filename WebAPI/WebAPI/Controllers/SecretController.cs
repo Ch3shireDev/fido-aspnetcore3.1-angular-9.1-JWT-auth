@@ -10,7 +10,7 @@ namespace WebAPI.Controllers
     {
         public IActionResult Get()
         {
-            return Ok(new {secret = "super secret info"});
+            return Ok(new {secret = "super secret info from api"});
         }
     }
 }

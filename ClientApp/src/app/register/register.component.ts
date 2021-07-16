@@ -24,7 +24,7 @@ export class RegisterComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {}
-  async register() {
+  register() {
     // this.userService.register(this.registerForm).subscribe((success) => {
     //   this.router.navigateByUrl('/login');
     // });
@@ -33,7 +33,8 @@ export class RegisterComponent implements OnInit {
     let displayName = this.registerForm.get('displayName').value;
     let password = this.registerForm.get('password').value;
 
-    await this.userService.register(username, displayName, password);
+    this.userService.register(username, displayName, password).then(() => {
+      this.router.navigateByUrl('/login');
+    });
   }
-
 }
