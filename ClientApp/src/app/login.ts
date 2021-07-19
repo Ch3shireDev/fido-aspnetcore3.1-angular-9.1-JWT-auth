@@ -125,6 +125,7 @@ export class LoginTools {
 
     localStorage.setItem('displayName', response.displayName);
     localStorage.setItem('token', response.token);
+    localStorage.setItem('username', response.username);
 
     console.log("Data:", response);
 

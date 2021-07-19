@@ -9,7 +9,7 @@ import { UserService } from './user.service';
 export class AppComponent {
   title = 'ClientApp';
 
-  get user(): { displayName: string } {
+  get user(): { displayName: string, username: string } {
     try{
     return this.userService.user;
     }

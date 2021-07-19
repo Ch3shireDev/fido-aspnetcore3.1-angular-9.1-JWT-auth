@@ -27,8 +27,6 @@ namespace WebAPI.Services
 
         Task<AssertionVerificationResult> LoginEnd(AuthenticatorAssertionRawResponse clientResponse,
             string jsonOptions);
-
-        Fido2User GetByUserId(byte[] userId);
         User GetByCredentialId(byte[] credentialId);
         User GetByUsername(string username);
     }

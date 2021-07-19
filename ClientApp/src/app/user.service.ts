@@ -13,7 +13,8 @@ declare let Swal: any;
 })
 export class UserService {
   logout() {
-    localStorage.removeItem('user');
+    localStorage.removeItem('username');
+    localStorage.removeItem('displayName');
     localStorage.removeItem('token');
   }
   api = environment.apiUrl;
@@ -22,11 +23,12 @@ export class UserService {
 
   public get user(): { username: string; displayName: string } {
     try {
-      return JSON.parse(localStorage.getItem('user')) as {
-        username: string;
-        displayName: string;
+      return {
+        username: localStorage.getItem('username'),
+        displayName: localStorage.getItem('displayName'),
       };
-    } catch {
+    } catch (e) {
+      console.log(e);
       return undefined;
     }
   }

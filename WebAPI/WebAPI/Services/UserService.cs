@@ -181,10 +181,10 @@ namespace WebAPI.Services
             return res;
         }
 
-        public Fido2User GetByUserId(byte[] userId)
-        {
-            return Tools.GetUserById(userId, connectionString);
-        }
+        //public Fido2User GetByUserId(byte[] userId)
+        //{
+        //    return Tools.GetUserById(userId, connectionString);
+        //}
 
         public User GetByCredentialId(byte[] credentialId)
         {

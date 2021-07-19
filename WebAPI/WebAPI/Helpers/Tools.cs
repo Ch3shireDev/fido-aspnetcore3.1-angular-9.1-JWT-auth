@@ -339,35 +339,35 @@ namespace WebAPI.Helpers
             return user;
         }
 
-        public static User GetUserById(byte[] userId, string connectionString)
-        {
-            User user = null;
-            using (var connection = new SqlConnection(connectionString))
-            {
-                connection.Open();
-                using (var cmd = connection.CreateCommand())
-                {
-                    cmd.CommandText =
-                        "select * from USERS where user_id = @user_id";
-                    cmd.Parameters.AddWithValue("@user_id", userId);
-                    var reader = cmd.ExecuteReader();
-                    while (reader.Read())
-                        user = new User
-                        {
-                            Id = reader["USER_ID"] as byte[],
-                            DisplayName = reader["DISPLAY_NAME"] as string,
-                            Name = reader["USERNAME"] as string,
-                            PasswordHash = reader["PASSWORD_HASH"] as byte[],
-                            PasswordSalt = reader["PASSWORD_SALT"] as byte[]
-                        };
-                    reader.Close();
-                }
+        //public static User GetUserById(byte[] userId, string connectionString)
+        //{
+        //    User user = null;
+        //    using (var connection = new SqlConnection(connectionString))
+        //    {
+        //        connection.Open();
+        //        using (var cmd = connection.CreateCommand())
+        //        {
+        //            cmd.CommandText =
+        //                "select * from USERS where user_id = @user_id";
+        //            cmd.Parameters.AddWithValue("@user_id", userId);
+        //            var reader = cmd.ExecuteReader();
+        //            while (reader.Read())
+        //                user = new User
+        //                {
+        //                    Id = reader["USER_ID"] as byte[],
+        //                    DisplayName = reader["DISPLAY_NAME"] as string,
+        //                    Name = reader["USERNAME"] as string,
+        //                    PasswordHash = reader["PASSWORD_HASH"] as byte[],
+        //                    PasswordSalt = reader["PASSWORD_SALT"] as byte[]
+        //                };
+        //            reader.Close();
+        //        }
 
-                connection.Close();
-            }
+        //        connection.Close();
+        //    }
 
-            return user;
-        }
+        //    return user;
+        //}
 
         public static User GetUserByCredentialId(byte[] credentialId, string connectionString)
         {
